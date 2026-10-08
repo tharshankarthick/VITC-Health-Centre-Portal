@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doctor Details — VITC Patient Portal</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">VITC HealthCare Portal</div>
+    <ul class="nav-links">
+      <li><a href="../patient.html">🏠 Dashboard</a></li>
+      <li><a href="doctorDetails.html" class="active">🩺 Doctor Details</a></li>
+      <li><a href="newRequest.html">📅 New Request</a></li>
+      <li><a href="contacts.html">📞 Contacts</a></li>
+      <li><a href="#" class="btn-emergency" onclick="openEmergencyModal(event)">Emergency Request</a></li>
+    </ul>
+  </nav>
+
+  
+  <div class="modal-overlay" id="emergencyModal">
+    <div class="modal">
+      <div class="modal-title">🚨 Emergency Request</div>
+      <p class="modal-subtitle">Send an urgent alert. On-duty doctors will be notified immediately.</p>
+      <div class="form-group"><label>Your Name</label><input type="text" id="em-name" class="form-control" placeholder="Your full name"></div>
+      <div class="form-group"><label>Your Phone</label><input type="tel" id="em-phone" class="form-control" placeholder="+91 XXXXX XXXXX"></div>
+      <div class="form-group"><label>Location / Ward</label><input type="text" id="em-location" class="form-control" placeholder="e.g. Block B, Room 108"></div>
+      <div class="form-group"><label>Describe the Emergency</label><textarea id="em-desc" class="form-control" rows="3" placeholder="e.g. Severe chest pain..."></textarea></div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" style="flex:1" onclick="submitEmergency()">🚨 Send Emergency Alert</button>
+        <button class="btn btn-outline" onclick="closeEmergencyModal()">Cancel</button>
+      </div>
+      <p style="text-align:center;margin-top:12px;font-size:0.78rem;color:var(--text-muted)">
+        Or call: <a href="tel:9751185800" style="color:var(--red-emergency);font-weight:700">📞 9751185800</a>
+      </p>
+    </div>
+  </div>
+
+  <main class="main-content" style="align-items:flex-start;">
+    <div class="dashboard">
+      <div class="dashboard-header">
+        <h1>Our Doctors</h1>
+        <p>Browse our team of qualified specialists and book an appointment</p>
+      </div>
+
+      
+      <div class="panel" style="margin-bottom:24px;">
+        <div class="panel-body">
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <div class="search-bar" style="flex:1;min-width:200px;">
+              <input type="text" id="searchInput" class="form-control" placeholder="Search doctor or specialty..." oninput="filterDoctors()">
+            </div>
+            <select id="specFilter" class="form-control" style="width:180px;" onchange="filterDoctors()">
+              <option value="">All Specialties</option>
+            </select>
+            <select id="statusFilter" class="form-control" style="width:150px;" onchange="filterDoctors()">
+              <option value="available">Available</option>
+              <option value="">All Status</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div id="doctor-cards" class="doctor-cards-grid">
+        <div class="loader"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="help-desk">
+      <strong>Help Desk:</strong>
+      <a href="mailto:tharshankarthick02@gmail.com">tharshankarthick02@gmail.com</a>
+      &nbsp;|&nbsp; Emergency: <a href="tel:9751185800">9751185800</a>
+    </div>
+    <div class="footer-copy">© 2026 VITC HealthCare Portal</div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = 'http://localhost:4001/api';
+    let allDoctors = [];
+
+    const SPECIALTIES_EMOJI = { cardiolog:'❤️', neurol:'🧠', ortho:'🦴', pediatr:'🍼', dermatol:'🫧', general:'🩺', oncol:'🎗️', gynae:'👶', ophtha:'👁️', ent:'👂' };
+    function getSpecialtyEmoji(spec) {
+      const s = spec.toLowerCase();
+      for (const [k,v] of Object.entries(SPECIALTIES_EMOJI)) { if (s.includes(k)) return v; }
+      return '🩺';
+    }
+
+    async function loadDoctors() {
+      try {
+        const res = await fetch(`${API}/doctors`);
+        allDoctors = await res.json();
+        
+        const specs = [...new Set(allDoctors.map(d => d.specialty).filter(Boolean))];
+        const specFilter = document.getElementById('specFilter');
+        specs.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s; opt.textContent = s;
+          specFilter.appendChild(opt);
+        });
+        filterDoctors();
+      } catch {
+        document.getElementById('doctor-cards').innerHTML =
+          `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">⚠️</div><h3>Server Not Reachable</h3><p>Start the backend server on port 4000.</p></div>`;
+      }
+    }
+
+    function filterDoctors() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const spec = document.getElementById('specFilter').value;
+      const status = document.getElementById('statusFilter').value;
+      renderCards(allDoctors.filter(d =>
+        (!q || d.name.toLowerCase().includes(q) || (d.specialty||'').toLowerCase().includes(q)) &&
+        (!spec || d.specialty === spec) &&
+        (!status || d.status === status)
+      ));
+    }
+
+    function renderCards(data) {
+      const container = document.getElementById('doctor-cards');
+      if (!data.length) {
+        container.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🔍</div><h3>No Doctors Found</h3><p>Try a different search or filter.</p></div>`;
+        return;
+      }
+      const badgeClass = s => s === 'available' ? 'badge-active' : s === 'on_leave' ? 'badge-pending' : 'badge-purple';
+      container.innerHTML = data.map(d => `
+        <div class="doctor-card">
+          <div class="doctor-avatar">${getSpecialtyEmoji(d.specialty||'')}</div>
+          <h4>${d.name}</h4>
+          <div class="specialty">${d.specialty || 'General'}</div>
+          <div class="availability">⏰ ${d.consultation_hours || 'Contact for hours'}</div>
+          <span class="badge ${badgeClass(d.status)}" style="margin-bottom:10px;display:inline-block">${(d.status||'available').replace('_',' ')}</span>
+          ${d.experience ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">🏅 ${d.experience} yrs experience</div>` : ''}
+          ${d.phone ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:12px">📞 ${d.phone}</div>` : '<div style="margin-bottom:12px"></div>'}
+          ${d.status === 'available' ?
+            `<a href="newRequest.html?doctor_id=${d.id}&doctor_name=${encodeURIComponent(d.name)}" class="btn btn-primary btn-sm" style="width:100%;justify-content:center">📅 Book Appointment</a>` :
+            `<span class="btn btn-outline btn-sm" style="width:100%;justify-content:center;cursor:default;opacity:0.5">Not Available</span>`
+          }
+        </div>
+      `).join('');
+    }
+
+    function openEmergencyModal(e) { e.preventDefault(); document.getElementById('emergencyModal').classList.add('active'); }
+    function closeEmergencyModal() { document.getElementById('emergencyModal').classList.remove('active'); }
+    async function submitEmergency() {
+      const name  = document.getElementById('em-name').value.trim();
+      const phone = document.getElementById('em-phone').value.trim();
+      const loc   = document.getElementById('em-location').value.trim();
+      const desc  = document.getElementById('em-desc').value.trim();
+      if (!name || !loc) { showToast('Fill name and location', 'error'); return; }
+      try {
+        await fetch(`${API}/emergency`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patient_name:name, phone, location:loc, description:desc, role:'patient' }) });
+        showToast('🚨 Help is on the way!', 'success'); closeEmergencyModal();
+      } catch { showToast('🚨 Alert sent! Call 9751185800 now.', 'success'); closeEmergencyModal(); }
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.className = `toast show ${type}`;
+      setTimeout(() => t.className = 'toast', 3500);
+    }
+
+    document.getElementById('emergencyModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('emergencyModal')) closeEmergencyModal();
+    });
+
+    loadDoctors();
+  </script>
+</body>
+</html>

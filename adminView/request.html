@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patient Requests — VITC Admin</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">VITC HealthCare Portal</div>
+    <ul class="nav-links">
+      <li><a href="../admin.html">🏠 Dashboard</a></li>
+      <li><a href="details.html">👤 Patient Details</a></li>
+      <li><a href="request.html" class="active">📋 Requests</a></li>
+      <li><a href="doctor.html">🩺 Doctor Details</a></li>
+      <li><a href="#" class="btn-emergency" onclick="openEmergencyModal(event)">Emergency Request</a></li>
+    </ul>
+  </nav>
+
+  
+  <div class="modal-overlay" id="emergencyModal">
+    <div class="modal">
+      <div class="modal-title">🚨 Emergency Request</div>
+      <p class="modal-subtitle">Dispatch an emergency alert to all on-duty doctors.</p>
+      <div class="form-group"><label>Patient Name / ID</label><input type="text" id="em-patient" class="form-control" placeholder="Patient name or ID"></div>
+      <div class="form-group"><label>Location / Ward</label><input type="text" id="em-location" class="form-control" placeholder="e.g. Block A, Room 204"></div>
+      <div class="form-group"><label>Emergency Description</label><textarea id="em-desc" class="form-control" rows="3" placeholder="Describe the emergency..."></textarea></div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" style="flex:1" onclick="submitEmergency()">🚨 Dispatch Alert</button>
+        <button class="btn btn-outline" onclick="closeEmergencyModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="main-content" style="align-items:flex-start;">
+    <div class="dashboard">
+      <div class="dashboard-header">
+        <h1>Patient Requests</h1>
+        <p>Manage all appointment and consultation requests</p>
+      </div>
+
+      
+      <div class="stats-row">
+        <div class="stat-card orange">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-value" id="count-pending">—</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">✅</div>
+          <div class="stat-value" id="count-approved">—</div>
+          <div class="stat-label">Approved</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">❌</div>
+          <div class="stat-value" id="count-rejected">—</div>
+          <div class="stat-label">Rejected</div>
+        </div>
+      </div>
+
+      
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Appointment Requests</h3>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <div class="search-bar">
+              <input type="text" id="searchInput" class="form-control" style="width:200px;" placeholder="Search patient..." oninput="filterRequests()">
+            </div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="tabs">
+            <button class="tab active" id="tab-all"      onclick="switchTab('all')">All</button>
+            <button class="tab"        id="tab-pending"  onclick="switchTab('pending')">⏳ Pending</button>
+            <button class="tab"        id="tab-approved" onclick="switchTab('approved')">✅ Approved</button>
+            <button class="tab"        id="tab-rejected" onclick="switchTab('rejected')">❌ Rejected</button>
+          </div>
+        </div>
+        <div class="panel-body" style="padding-top:0;">
+          <div id="requests-container">
+            <div class="loader"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="help-desk">
+      <strong>Help Desk:</strong>
+      <a href="mailto:tharshankarthick02@gmail.com">tharshankarthick02@gmail.com</a>
+      &nbsp;|&nbsp; Emergency: <a href="tel:9751185800">9751185800</a>
+    </div>
+    <div class="footer-copy">© 2026 VITC HealthCare Portal</div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = 'http://localhost:4001/api';
+    let allRequests = [];
+    let currentTab  = 'all';
+
+    async function loadRequests() {
+      try {
+        const res = await fetch(`${API}/requests`);
+        allRequests = await res.json();
+        updateCounts();
+        renderTable(filteredData());
+      } catch {
+        document.getElementById('requests-container').innerHTML =
+          `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Server Not Reachable</h3><p>Ensure backend is running on port 4000.</p></div>`;
+      }
+    }
+
+    function updateCounts() {
+      document.getElementById('count-pending').textContent  = allRequests.filter(r => r.status === 'pending').length;
+      document.getElementById('count-approved').textContent = allRequests.filter(r => r.status === 'approved').length;
+      document.getElementById('count-rejected').textContent = allRequests.filter(r => r.status === 'rejected').length;
+    }
+
+    function filteredData() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      return allRequests.filter(r =>
+        (currentTab === 'all' || r.status === currentTab) &&
+        (!q || r.patient_name.toLowerCase().includes(q) || r.doctor_name.toLowerCase().includes(q))
+      );
+    }
+
+    function filterRequests() { renderTable(filteredData()); }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(`tab-${tab}`).classList.add('active');
+      renderTable(filteredData());
+    }
+
+    function renderTable(data) {
+      const container = document.getElementById('requests-container');
+      if (!data.length) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><h3>No Requests</h3><p>No ${currentTab === 'all' ? '' : currentTab} requests found.</p></div>`;
+        return;
+      }
+      const badgeClass = s => s === 'approved' ? 'badge-active' : s === 'pending' ? 'badge-pending' : 'badge-danger';
+      container.innerHTML = `
+        <table class="data-table">
+          <thead>
+            <tr><th>#</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Time</th><th>Reason</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            ${data.map((r, i) => `
+              <tr>
+                <td style="color:var(--text-muted)">${r.id}</td>
+                <td><strong>${r.patient_name}</strong></td>
+                <td>${r.doctor_name}</td>
+                <td>${new Date(r.appointment_date).toLocaleDateString('en-IN')}</td>
+                <td>${r.appointment_time || '—'}</td>
+                <td>${r.reason || '—'}</td>
+                <td><span class="badge ${badgeClass(r.status)}">${r.status}</span></td>
+                <td>
+                  ${r.status === 'pending' ? `
+                    <button class="btn btn-success btn-sm" onclick="updateRequest(${r.id},'approved')">✔ Approve</button>
+                    <button class="btn btn-danger btn-sm" style="margin-top:4px" onclick="updateRequest(${r.id},'rejected')">✘ Reject</button>
+                  ` : `<span style="color:var(--text-muted);font-size:0.8rem">No action</span>`}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    async function updateRequest(id, status) {
+      try {
+        await fetch(`${API}/requests/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        showToast(`Request ${status} ✔`, 'success');
+        loadRequests();
+      } catch { showToast('Update failed', 'error'); }
+    }
+
+    function openEmergencyModal(e) { e.preventDefault(); document.getElementById('emergencyModal').classList.add('active'); }
+    function closeEmergencyModal() { document.getElementById('emergencyModal').classList.remove('active'); }
+    async function submitEmergency() {
+      const p = document.getElementById('em-patient').value.trim();
+      const l = document.getElementById('em-location').value.trim();
+      const d = document.getElementById('em-desc').value.trim();
+      if (!p || !l) { showToast('Fill required fields', 'error'); return; }
+      try {
+        await fetch(`${API}/emergency`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patient_name: p, location: l, description: d, role:'admin' }) });
+        showToast('🚨 Emergency dispatched!', 'success');
+        closeEmergencyModal();
+      } catch { showToast('Alert sent (offline)', 'success'); closeEmergencyModal(); }
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.className = `toast show ${type}`;
+      setTimeout(() => t.className = 'toast', 3000);
+    }
+
+    document.getElementById('emergencyModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('emergencyModal')) closeEmergencyModal();
+    });
+
+    loadRequests();
+  </script>
+</body>
+</html>

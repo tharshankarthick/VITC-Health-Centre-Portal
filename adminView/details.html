@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patient Details — VITC Admin</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">VITC HealthCare Portal</div>
+    <ul class="nav-links">
+      <li><a href="../admin.html">🏠 Dashboard</a></li>
+      <li><a href="details.html" class="active">👤 Patient Details</a></li>
+      <li><a href="request.html">📋 Requests</a></li>
+      <li><a href="doctor.html">🩺 Doctor Details</a></li>
+      <li><a href="#" class="btn-emergency" onclick="openEmergencyModal(event)">Emergency Request</a></li>
+    </ul>
+  </nav>
+
+  
+  <div class="modal-overlay" id="emergencyModal">
+    <div class="modal">
+      <div class="modal-title">🚨 Emergency Request</div>
+      <p class="modal-subtitle">Dispatch an emergency alert to all on-duty doctors.</p>
+      <div class="form-group">
+        <label>Patient Name / ID</label>
+        <input type="text" id="em-patient" class="form-control" placeholder="Patient name or ID">
+      </div>
+      <div class="form-group">
+        <label>Location / Ward</label>
+        <input type="text" id="em-location" class="form-control" placeholder="e.g. Block A, Room 204">
+      </div>
+      <div class="form-group">
+        <label>Emergency Description</label>
+        <textarea id="em-desc" class="form-control" rows="3" placeholder="Describe the emergency..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" style="flex:1" onclick="submitEmergency()">🚨 Dispatch Alert</button>
+        <button class="btn btn-outline" onclick="closeEmergencyModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="main-content" style="align-items:flex-start;">
+    <div class="dashboard">
+      <div class="dashboard-header">
+        <h1>Patient Details</h1>
+        <p>All registered patients in the VITC Health System</p>
+      </div>
+
+      
+      <div class="panel" style="margin-bottom:24px;">
+        <div class="panel-body">
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <div class="search-bar" style="flex:1;min-width:220px;">
+              <input type="text" id="searchInput" class="form-control" placeholder="Search by name, ID, or condition..." oninput="filterPatients()">
+            </div>
+            <select id="statusFilter" class="form-control" style="width:160px;" onchange="filterPatients()">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="admitted">Admitted</option>
+              <option value="discharged">Discharged</option>
+            </select>
+            <button class="btn btn-primary" onclick="openAddModal()">+ Add Patient</button>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Patient Registry</h3>
+          <span id="patient-count" style="font-size:0.82rem;color:var(--text-muted)">Loading...</span>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <div id="patient-table-container">
+            <div class="loader"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  
+  <div class="modal-overlay" id="addPatientModal">
+    <div class="modal">
+      <div class="modal-title" style="color:var(--purple-light)">👤 <span id="patientModalTitle">Add Patient</span></div>
+      <input type="hidden" id="editPatientId">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="p-name" class="form-control" placeholder="e.g. Ramesh Kumar">
+        </div>
+        <div class="form-group">
+          <label>Age *</label>
+          <input type="number" id="p-age" class="form-control" placeholder="e.g. 34">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Gender</label>
+          <select id="p-gender" class="form-control">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Blood Group</label>
+          <select id="p-blood" class="form-control">
+            <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+            <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Condition / Diagnosis</label>
+        <input type="text" id="p-condition" class="form-control" placeholder="e.g. Hypertension, Diabetes">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="p-phone" class="form-control" placeholder="+91 XXXXX XXXXX">
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="p-status" class="form-control">
+            <option value="active">Active</option>
+            <option value="admitted">Admitted</option>
+            <option value="discharged">Discharged</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" style="flex:1" onclick="savePatient()">💾 Save Patient</button>
+        <button class="btn btn-outline" onclick="closeAddModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="help-desk">
+      <strong>Help Desk:</strong>
+      <a href="mailto:tharshankarthick02@gmail.com">tharshankarthick02@gmail.com</a>
+      &nbsp;|&nbsp; Emergency: <a href="tel:9751185800">9751185800</a>
+    </div>
+    <div class="footer-copy">© 2026 VITC HealthCare Portal</div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = 'http://localhost:4001/api';
+    let allPatients = [];
+
+    async function loadPatients() {
+      try {
+        const res = await fetch(`${API}/patients`);
+        allPatients = await res.json();
+        renderTable(allPatients);
+        document.getElementById('patient-count').textContent = `${allPatients.length} patients`;
+      } catch {
+        document.getElementById('patient-table-container').innerHTML =
+          `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Could not connect to server</h3><p>Make sure the backend is running on port 4000.</p></div>`;
+      }
+    }
+
+    function renderTable(data) {
+      const container = document.getElementById('patient-table-container');
+      if (!data.length) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">👤</div><h3>No Patients Found</h3><p>Add patients to see them here.</p></div>`;
+        return;
+      }
+      const badgeClass = s => s === 'active' ? 'badge-active' : s === 'admitted' ? 'badge-info' : 'badge-purple';
+      container.innerHTML = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Name</th><th>Age</th><th>Gender</th>
+              <th>Blood Group</th><th>Condition</th><th>Phone</th>
+              <th>Registered</th><th>Status</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map((p, i) => `
+              <tr>
+                <td style="color:var(--text-muted)">${p.id}</td>
+                <td><strong>${p.name}</strong></td>
+                <td>${p.age}</td>
+                <td style="text-transform:capitalize">${p.gender}</td>
+                <td><span class="badge badge-info">${p.blood_group || '—'}</span></td>
+                <td>${p.condition || '—'}</td>
+                <td>${p.phone || '—'}</td>
+                <td>${p.created_at ? new Date(p.created_at).toLocaleDateString('en-IN') : '—'}</td>
+                <td><span class="badge ${badgeClass(p.status)}">${p.status}</span></td>
+                <td style="display:flex;gap:6px;">
+                  <button class="btn btn-outline btn-sm" onclick="editPatient(${JSON.stringify(p).replace(/"/g,'&quot;')})">✏️</button>
+                  <button class="btn btn-danger btn-sm" onclick="deletePatient(${p.id})">🗑️</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    function filterPatients() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const s = document.getElementById('statusFilter').value;
+      const filtered = allPatients.filter(p =>
+        (!q || p.name.toLowerCase().includes(q) || String(p.id).includes(q) || (p.condition||'').toLowerCase().includes(q)) &&
+        (!s || p.status === s)
+      );
+      renderTable(filtered);
+      document.getElementById('patient-count').textContent = `${filtered.length} of ${allPatients.length} patients`;
+    }
+
+    function openAddModal() {
+      document.getElementById('patientModalTitle').textContent = 'Add Patient';
+      document.getElementById('editPatientId').value = '';
+      ['p-name','p-age','p-condition','p-phone'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('addPatientModal').classList.add('active');
+    }
+
+    function editPatient(p) {
+      document.getElementById('patientModalTitle').textContent = 'Edit Patient';
+      document.getElementById('editPatientId').value = p.id;
+      document.getElementById('p-name').value      = p.name;
+      document.getElementById('p-age').value       = p.age;
+      document.getElementById('p-gender').value    = p.gender;
+      document.getElementById('p-blood').value     = p.blood_group || 'A+';
+      document.getElementById('p-condition').value = p.condition || '';
+      document.getElementById('p-phone').value     = p.phone || '';
+      document.getElementById('p-status').value    = p.status;
+      document.getElementById('addPatientModal').classList.add('active');
+    }
+
+    function closeAddModal() { document.getElementById('addPatientModal').classList.remove('active'); }
+
+    async function savePatient() {
+      const id = document.getElementById('editPatientId').value;
+      const payload = {
+        name:       document.getElementById('p-name').value.trim(),
+        age:        parseInt(document.getElementById('p-age').value),
+        gender:     document.getElementById('p-gender').value,
+        blood_group:document.getElementById('p-blood').value,
+        condition:  document.getElementById('p-condition').value.trim(),
+        phone:      document.getElementById('p-phone').value.trim(),
+        status:     document.getElementById('p-status').value
+      };
+      if (!payload.name || !payload.age) { showToast('Name and Age are required', 'error'); return; }
+      try {
+        if (id) {
+          await fetch(`${API}/patients/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+          showToast('Patient updated successfully', 'success');
+        } else {
+          await fetch(`${API}/patients`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+          showToast('Patient added successfully', 'success');
+        }
+        closeAddModal();
+        loadPatients();
+      } catch { showToast('Failed to save. Check server.', 'error'); }
+    }
+
+    async function deletePatient(id) {
+      if (!confirm('Delete this patient record permanently?')) return;
+      try {
+        await fetch(`${API}/patients/${id}`, { method: 'DELETE' });
+        showToast('Patient deleted', 'success');
+        loadPatients();
+      } catch { showToast('Delete failed', 'error'); }
+    }
+
+    function openEmergencyModal(e) { e.preventDefault(); document.getElementById('emergencyModal').classList.add('active'); }
+    function closeEmergencyModal() { document.getElementById('emergencyModal').classList.remove('active'); }
+
+    async function submitEmergency() {
+      const patient  = document.getElementById('em-patient').value.trim();
+      const location = document.getElementById('em-location').value.trim();
+      const desc     = document.getElementById('em-desc').value.trim();
+      if (!patient || !location) { showToast('Fill required fields', 'error'); return; }
+      try {
+        await fetch(`${API}/emergency`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patient_name: patient, location, description: desc, role:'admin' }) });
+        showToast('🚨 Emergency dispatched!', 'success');
+        closeEmergencyModal();
+      } catch { showToast('Alert sent (offline)', 'success'); closeEmergencyModal(); }
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.className = `toast show ${type}`;
+      setTimeout(() => t.className = 'toast', 3000);
+    }
+
+    [document.getElementById('emergencyModal'), document.getElementById('addPatientModal')].forEach(m => {
+      m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
+    });
+
+    loadPatients();
+  </script>
+</body>
+</html>

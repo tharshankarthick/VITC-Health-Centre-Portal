@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doctor Details — VITC Admin</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">VITC HealthCare Portal</div>
+    <ul class="nav-links">
+      <li><a href="../admin.html">🏠 Dashboard</a></li>
+      <li><a href="details.html">👤 Patient Details</a></li>
+      <li><a href="request.html">📋 Requests</a></li>
+      <li><a href="doctor.html" class="active">🩺 Doctor Details</a></li>
+      <li><a href="#" class="btn-emergency" onclick="openEmergencyModal(event)">Emergency Request</a></li>
+    </ul>
+  </nav>
+
+  
+  <div class="modal-overlay" id="emergencyModal">
+    <div class="modal">
+      <div class="modal-title">🚨 Emergency Request</div>
+      <p class="modal-subtitle">Dispatch an emergency alert to all on-duty doctors.</p>
+      <div class="form-group"><label>Patient Name / ID</label><input type="text" id="em-patient" class="form-control" placeholder="Patient name or ID"></div>
+      <div class="form-group"><label>Location / Ward</label><input type="text" id="em-location" class="form-control" placeholder="e.g. Block A, Room 204"></div>
+      <div class="form-group"><label>Description</label><textarea id="em-desc" class="form-control" rows="3" placeholder="Describe the emergency..."></textarea></div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" style="flex:1" onclick="submitEmergency()">🚨 Dispatch Alert</button>
+        <button class="btn btn-outline" onclick="closeEmergencyModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="modal-overlay" id="doctorModal">
+    <div class="modal">
+      <div class="modal-title" style="color:var(--purple-light)">🩺 <span id="doctorModalTitle">Add Doctor</span></div>
+      <input type="hidden" id="editDoctorId">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="d-name" class="form-control" placeholder="e.g. Dr. Ananya Sharma">
+        </div>
+        <div class="form-group">
+          <label>Specialty *</label>
+          <input type="text" id="d-specialty" class="form-control" placeholder="e.g. Cardiologist">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="tel" id="d-phone" class="form-control" placeholder="+91 XXXXX XXXXX">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="d-email" class="form-control" placeholder="doctor@vitc.edu.in">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Experience (years)</label>
+          <input type="number" id="d-exp" class="form-control" placeholder="e.g. 8">
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="d-status" class="form-control">
+            <option value="available">Available</option>
+            <option value="on_leave">On Leave</option>
+            <option value="off_duty">Off Duty</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Consultation Hours</label>
+        <input type="text" id="d-hours" class="form-control" placeholder="e.g. Mon-Fri 9:00 AM – 5:00 PM">
+      </div>
+      <div class="form-group">
+        <label>Available Dates (comma-separated YYYY-MM-DD)</label>
+        <input type="text" id="d-dates" class="form-control" placeholder="e.g. 2026-09-10, 2026-09-12">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" style="flex:1" onclick="saveDoctor()">💾 Save Doctor</button>
+        <button class="btn btn-outline" onclick="closeDoctorModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="main-content" style="align-items:flex-start;">
+    <div class="dashboard">
+      <div class="dashboard-header">
+        <h1>Doctor Details</h1>
+        <p>Manage all doctors in the VITC Health System</p>
+      </div>
+
+      
+      <div class="panel" style="margin-bottom:24px;">
+        <div class="panel-body">
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <div class="search-bar" style="flex:1;min-width:220px;">
+              <input type="text" id="searchInput" class="form-control" placeholder="Search by name or specialty..." oninput="filterDoctors()">
+            </div>
+            <select id="statusFilter" class="form-control" style="width:160px;" onchange="filterDoctors()">
+              <option value="">All Status</option>
+              <option value="available">Available</option>
+              <option value="on_leave">On Leave</option>
+              <option value="off_duty">Off Duty</option>
+            </select>
+            <button class="btn btn-primary" onclick="openAddDoctorModal()">+ Add Doctor</button>
+          </div>
+        </div>
+      </div>
+
+      
+      <div id="doctor-cards" class="doctor-cards-grid">
+        <div class="loader"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="help-desk">
+      <strong>Help Desk:</strong>
+      <a href="mailto:tharshankarthick02@gmail.com">tharshankarthick02@gmail.com</a>
+      &nbsp;|&nbsp; Emergency: <a href="tel:9751185800">9751185800</a>
+    </div>
+    <div class="footer-copy">© 2026 VITC HealthCare Portal</div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = 'http://localhost:4001/api';
+    let allDoctors = [];
+
+    const EMOJIS = ['👨‍⚕️','👩‍⚕️','🧑‍⚕️'];
+    const SPECIALTIES_EMOJI = { cardiolog:'❤️', neurol:'🧠', ortho:'🦴', pediatr:'🍼', dermatol:'🫧', general:'🩺', oncol:'🎗️', gynae:'👶', ophtha:'👁️', ent:'👂' };
+
+    function getSpecialtyEmoji(spec) {
+      const s = spec.toLowerCase();
+      for (const [k, v] of Object.entries(SPECIALTIES_EMOJI)) {
+        if (s.includes(k)) return v;
+      }
+      return '🩺';
+    }
+
+    async function loadDoctors() {
+      try {
+        const res = await fetch(`${API}/doctors`);
+        allDoctors = await res.json();
+        renderCards(allDoctors);
+      } catch {
+        document.getElementById('doctor-cards').innerHTML =
+          `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">⚠️</div><h3>Server Not Reachable</h3><p>Start the backend on port 4000.</p></div>`;
+      }
+    }
+
+    function renderCards(data) {
+      const container = document.getElementById('doctor-cards');
+      if (!data.length) {
+        container.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🩺</div><h3>No Doctors Found</h3><p>Add doctors to see them here.</p></div>`;
+        return;
+      }
+      const badgeClass = s => s === 'available' ? 'badge-active' : s === 'on_leave' ? 'badge-pending' : 'badge-purple';
+      container.innerHTML = data.map(d => `
+        <div class="doctor-card">
+          <div class="doctor-avatar">${getSpecialtyEmoji(d.specialty || '')}</div>
+          <h4>${d.name}</h4>
+          <div class="specialty">${d.specialty || 'General'}</div>
+          <div class="availability">⏰ ${d.consultation_hours || 'Not set'}</div>
+          <div style="margin-bottom:10px">
+            <span class="badge ${badgeClass(d.status)}">${(d.status||'available').replace('_',' ')}</span>
+          </div>
+          ${d.phone ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">📞 ${d.phone}</div>` : ''}
+          ${d.experience ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px">🏅 ${d.experience} yrs experience</div>` : ''}
+          <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
+            <button class="btn btn-outline btn-sm" onclick="editDoctor(${JSON.stringify(d).replace(/"/g,'&quot;')})">✏️ Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteDoctor(${d.id})">🗑️</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterDoctors() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const s = document.getElementById('statusFilter').value;
+      renderCards(allDoctors.filter(d =>
+        (!q || d.name.toLowerCase().includes(q) || (d.specialty||'').toLowerCase().includes(q)) &&
+        (!s || d.status === s)
+      ));
+    }
+
+    function openAddDoctorModal() {
+      document.getElementById('doctorModalTitle').textContent = 'Add Doctor';
+      document.getElementById('editDoctorId').value = '';
+      ['d-name','d-specialty','d-phone','d-email','d-exp','d-hours','d-dates'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('d-status').value = 'available';
+      document.getElementById('doctorModal').classList.add('active');
+    }
+
+    function editDoctor(d) {
+      document.getElementById('doctorModalTitle').textContent = 'Edit Doctor';
+      document.getElementById('editDoctorId').value = d.id;
+      document.getElementById('d-name').value      = d.name;
+      document.getElementById('d-specialty').value = d.specialty || '';
+      document.getElementById('d-phone').value     = d.phone || '';
+      document.getElementById('d-email').value     = d.email || '';
+      document.getElementById('d-exp').value       = d.experience || '';
+      document.getElementById('d-status').value    = d.status || 'available';
+      document.getElementById('d-hours').value     = d.consultation_hours || '';
+      document.getElementById('d-dates').value     = d.available_dates || '';
+      document.getElementById('doctorModal').classList.add('active');
+    }
+
+    function closeDoctorModal() { document.getElementById('doctorModal').classList.remove('active'); }
+
+    async function saveDoctor() {
+      const id = document.getElementById('editDoctorId').value;
+      const payload = {
+        name:               document.getElementById('d-name').value.trim(),
+        specialty:          document.getElementById('d-specialty').value.trim(),
+        phone:              document.getElementById('d-phone').value.trim(),
+        email:              document.getElementById('d-email').value.trim(),
+        experience:         parseInt(document.getElementById('d-exp').value) || 0,
+        status:             document.getElementById('d-status').value,
+        consultation_hours: document.getElementById('d-hours').value.trim(),
+        available_dates:    document.getElementById('d-dates').value.trim()
+      };
+      if (!payload.name || !payload.specialty) { showToast('Name and Specialty required', 'error'); return; }
+      try {
+        if (id) {
+          await fetch(`${API}/doctors/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+          showToast('Doctor updated ✔', 'success');
+        } else {
+          await fetch(`${API}/doctors`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+          showToast('Doctor added ✔', 'success');
+        }
+        closeDoctorModal();
+        loadDoctors();
+      } catch { showToast('Failed to save. Check server.', 'error'); }
+    }
+
+    async function deleteDoctor(id) {
+      if (!confirm('Delete this doctor record permanently?')) return;
+      try {
+        await fetch(`${API}/doctors/${id}`, { method: 'DELETE' });
+        showToast('Doctor deleted', 'success');
+        loadDoctors();
+      } catch { showToast('Delete failed', 'error'); }
+    }
+
+    function openEmergencyModal(e) { e.preventDefault(); document.getElementById('emergencyModal').classList.add('active'); }
+    function closeEmergencyModal() { document.getElementById('emergencyModal').classList.remove('active'); }
+    async function submitEmergency() {
+      const p = document.getElementById('em-patient').value.trim();
+      const l = document.getElementById('em-location').value.trim();
+      if (!p || !l) { showToast('Fill required fields', 'error'); return; }
+      try {
+        await fetch(`${API}/emergency`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patient_name:p, location:l, description: document.getElementById('em-desc').value, role:'admin' }) });
+        showToast('🚨 Emergency dispatched!', 'success'); closeEmergencyModal();
+      } catch { showToast('Alert sent (offline)', 'success'); closeEmergencyModal(); }
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.className = `toast show ${type}`;
+      setTimeout(() => t.className = 'toast', 3000);
+    }
+
+    [document.getElementById('emergencyModal'), document.getElementById('doctorModal')].forEach(m => {
+      m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
+    });
+
+    loadDoctors();
+  </script>
+</body>
+</html>

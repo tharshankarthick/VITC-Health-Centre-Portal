@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patient Dashboard — VITC HealthCare Portal</title>
+  <meta name="description" content="VITC HealthCare Patient Portal — view doctors, book appointments, and manage requests.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  
+  <nav class="navbar">
+    <div class="nav-brand">VITC HealthCare Portal</div>
+    <ul class="nav-links">
+      <li><a href="patientView/doctorDetails.html">🩺 Doctor Details</a></li>
+      <li><a href="patientView/newRequest.html">📅 New Request</a></li>
+      <li><a href="patientView/contacts.html">📞 Contacts</a></li>
+      <li>
+        <a href="#" class="btn-emergency" id="emergencyBtn" onclick="openEmergencyModal(event)">
+          Emergency Request
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  
+  <div class="modal-overlay" id="emergencyModal">
+    <div class="modal">
+      <div class="modal-title">🚨 Emergency Request</div>
+      <p class="modal-subtitle">Send an urgent emergency alert. On-duty doctors will be notified immediately.</p>
+      <div class="form-group">
+        <label for="em-name">Your Name</label>
+        <input type="text" id="em-name" class="form-control" placeholder="Your full name">
+      </div>
+      <div class="form-group">
+        <label for="em-phone">Your Phone Number</label>
+        <input type="tel" id="em-phone" class="form-control" placeholder="+91 XXXXX XXXXX">
+      </div>
+      <div class="form-group">
+        <label for="em-location">Your Location / Ward / Room</label>
+        <input type="text" id="em-location" class="form-control" placeholder="e.g. Block B, Room 108 / OPD Lobby">
+      </div>
+      <div class="form-group">
+        <label for="em-desc">Describe the Emergency</label>
+        <textarea id="em-desc" class="form-control" rows="3" placeholder="e.g. Severe chest pain, unconscious patient..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" style="flex:1;font-size:0.95rem" onclick="submitEmergency()">🚨 Send Emergency Alert</button>
+        <button class="btn btn-outline" onclick="closeEmergencyModal()">Cancel</button>
+      </div>
+      <p style="text-align:center;margin-top:14px;font-size:0.78rem;color:var(--text-muted)">
+        Or call directly: <a href="tel:9751185800" style="color:var(--red-emergency);font-weight:700">📞 9751185800</a>
+      </p>
+    </div>
+  </div>
+
+  
+  <main class="main-content" style="align-items:flex-start;">
+    <div class="dashboard">
+
+      
+      <div class="dashboard-header">
+        <h1>Patient Dashboard</h1>
+        <p id="patient-greeting">Welcome! Here's your health portal overview.</p>
+      </div>
+
+
+      
+      <div class="dashboard-grid">
+
+        
+        <div class="calendar-card">
+          <div class="calendar-header">
+            <button id="prev">&#10094;</button>
+            <h2 id="month-year"></h2>
+            <button id="next">&#10095;</button>
+          </div>
+          <div class="weekdays">
+            <div>Sun</div><div>Mon</div><div>Tue</div>
+            <div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+          </div>
+          <div class="days" id="days"></div>
+          <div class="doctor-info" id="doctor-info">
+            <p id="doctor-text">Select a date to see available doctors.</p>
+          </div>
+        </div>
+
+        
+        <div style="display:flex;flex-direction:column;gap:20px;">
+
+          
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Quick Actions</h3>
+            </div>
+            <div class="panel-body">
+              <div class="quick-actions">
+                <a href="patientView/doctorDetails.html" class="action-tile">
+                  <div class="action-tile-icon cyan">🩺</div>
+                  <div class="action-tile-text">
+                    <h4>View Doctors</h4>
+                    <p>Browse available specialists</p>
+                  </div>
+                </a>
+                <a href="patientView/newRequest.html" class="action-tile">
+                  <div class="action-tile-icon purple">📅</div>
+                  <div class="action-tile-text">
+                    <h4>Book Appointment</h4>
+                    <p>Request a new consultation</p>
+                  </div>
+                </a>
+                <a href="patientView/contacts.html" class="action-tile">
+                  <div class="action-tile-icon green">📞</div>
+                  <div class="action-tile-text">
+                    <h4>Contact Us</h4>
+                    <p>Hospital contacts & helplines</p>
+                  </div>
+                </a>
+                <a href="#" class="action-tile" onclick="openEmergencyModal(event)">
+                  <div class="action-tile-icon orange">🚨</div>
+                  <div class="action-tile-text">
+                    <h4>Emergency</h4>
+                    <p>Request urgent doctor call</p>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          
+          <div class="panel">
+            <div class="panel-header">
+              <h3>My Recent Appointments</h3>
+              <a href="patientView/newRequest.html" class="btn btn-primary btn-sm">+ New</a>
+            </div>
+            <div class="panel-body" style="padding:0">
+              <div id="my-requests-container">
+                <div class="loader"><div class="spinner"></div></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  
+  <footer class="footer">
+    <div class="help-desk">
+      <strong>Help Desk:</strong>
+      <a href="mailto:tharshankarthick02@gmail.com">tharshankarthick02@gmail.com</a>
+      &nbsp;|&nbsp; Emergency Line: <a href="tel:9751185800">9751185800</a>
+    </div>
+    <div class="footer-copy">© 2026 VITC HealthCare Portal. All rights reserved.</div>
+  </footer>
+
+  
+  <div class="toast" id="toast"></div>
+
+  <script src="script.js"></script>
+  <script>
+    const API = 'http://localhost:4001/api';
+
+    
+    const now = new Date();
+    const hour = now.getHours();
+    const greet = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+    document.getElementById('patient-greeting').textContent =
+      `${greet}! • ${now.toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}`;
+
+    async function loadPatientStats() {
+      try {
+        const [dRes, rRes] = await Promise.all([
+          fetch(`${API}/doctors`),
+          fetch(`${API}/requests`)
+        ]);
+        const doctors  = await dRes.json();
+        const requests = await rRes.json();
+        document.getElementById('stat-docs').textContent        = doctors.filter(d => d.status === 'available').length || 0;
+        document.getElementById('stat-my-requests').textContent = requests.length || 0;
+        document.getElementById('stat-approved').textContent    = requests.filter(r => r.status === 'approved').length || 0;
+      } catch {
+        ['stat-docs','stat-my-requests','stat-approved'].forEach(id => {
+          document.getElementById(id).textContent = '—';
+        });
+      }
+    }
+
+    async function loadMyRequests() {
+      const container = document.getElementById('my-requests-container');
+      try {
+        const res = await fetch(`${API}/requests`);
+        const data = await res.json();
+        const recent = data.slice(0, 6);
+        if (!recent.length) {
+          container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><h3>No Appointments</h3><p>Book your first appointment now.</p></div>`;
+          return;
+        }
+        const statusBadge = s => s === 'approved' ? 'badge-active' : s === 'pending' ? 'badge-pending' : 'badge-danger';
+        container.innerHTML = `
+          <table class="data-table">
+            <thead>
+              <tr><th>#</th><th>Doctor</th><th>Date</th><th>Reason</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              ${recent.map((r,i) => `
+                <tr>
+                  <td style="color:var(--text-muted)">${i+1}</td>
+                  <td><strong>${r.doctor_name}</strong></td>
+                  <td>${new Date(r.appointment_date).toLocaleDateString('en-IN')}</td>
+                  <td>${r.reason || '—'}</td>
+                  <td><span class="badge ${statusBadge(r.status)}">${r.status}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>`;
+      } catch {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Could not load appointments</h3><p>Make sure backend is running on port 4000.</p></div>`;
+      }
+    }
+
+    
+    function openEmergencyModal(e) { e.preventDefault(); document.getElementById('emergencyModal').classList.add('active'); }
+    function closeEmergencyModal() { document.getElementById('emergencyModal').classList.remove('active'); }
+
+    async function submitEmergency() {
+      const name     = document.getElementById('em-name').value.trim();
+      const phone    = document.getElementById('em-phone').value.trim();
+      const location = document.getElementById('em-location').value.trim();
+      const desc     = document.getElementById('em-desc').value.trim();
+      if (!name || !location) { showToast('Please fill in your name and location', 'error'); return; }
+      try {
+        await fetch(`${API}/emergency`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ patient_name: name, phone, location, description: desc, role: 'patient' })
+        });
+        showToast('🚨 Emergency alert sent! Help is on the way.', 'success');
+        closeEmergencyModal();
+      } catch { showToast('🚨 Alert sent (offline mode). Call 9751185800!', 'success'); closeEmergencyModal(); }
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast show ${type}`;
+      setTimeout(() => t.className = 'toast', 3500);
+    }
+
+    document.getElementById('emergencyModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('emergencyModal')) closeEmergencyModal();
+    });
+
+    loadPatientStats();
+    loadMyRequests();
+  </script>
+</body>
+</html>

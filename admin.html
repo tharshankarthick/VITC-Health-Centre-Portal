@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — VITC HealthCare Portal</title>
+  <meta name="description" content="VITC HealthCare Admin Portal — manage patients, doctors, and appointments.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  
+  <nav class="navbar">
+    <div class="nav-brand">VITC HealthCare Portal</div>
+    <ul class="nav-links">
+      <li><a href="adminView/details.html">👤 Patient Details</a></li>
+      <li><a href="adminView/request.html">📋 Requests</a></li>
+      <li><a href="adminView/doctor.html">🩺 Doctor Details</a></li>
+      <li>
+        <a href="#" class="btn-emergency" id="emergencyBtn" onclick="openEmergencyModal(event)">
+          Emergency Request
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  
+  <div class="modal-overlay" id="emergencyModal">
+    <div class="modal">
+      <div class="modal-title">🚨 Emergency Request</div>
+      <p class="modal-subtitle">Dispatch an emergency alert immediately. This will notify all on-duty doctors.</p>
+      <div class="form-group">
+        <label for="em-patient">Patient Name / ID</label>
+        <input type="text" id="em-patient" class="form-control" placeholder="e.g. Tharshan K / P-1042">
+      </div>
+      <div class="form-group">
+        <label for="em-location">Location / Ward</label>
+        <input type="text" id="em-location" class="form-control" placeholder="e.g. Block A, Room 204">
+      </div>
+      <div class="form-group">
+        <label for="em-desc">Emergency Description</label>
+        <textarea id="em-desc" class="form-control" rows="3" placeholder="Briefly describe the emergency..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" style="flex:1" onclick="submitEmergency()">🚨 Dispatch Alert</button>
+        <button class="btn btn-outline" onclick="closeEmergencyModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  
+  <main class="main-content" style="align-items:flex-start;">
+    <div class="dashboard">
+
+      
+      <div class="dashboard-header">
+        <h1>Admin Dashboard</h1>
+        <p id="admin-date-greeting">Loading...</p>
+      </div>
+
+
+      
+      <div class="dashboard-grid">
+
+        
+        <div class="calendar-card">
+          <div class="calendar-header">
+            <button id="prev">&#10094;</button>
+            <h2 id="month-year"></h2>
+            <button id="next">&#10095;</button>
+          </div>
+          <div class="weekdays">
+            <div>Sun</div><div>Mon</div><div>Tue</div>
+            <div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+          </div>
+          <div class="days" id="days"></div>
+          <div class="doctor-info" id="doctor-info">
+            <p id="doctor-text">Select a date to view scheduled doctors.</p>
+          </div>
+        </div>
+
+        
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Recent Patient Requests</h3>
+            <a href="adminView/request.html" class="btn btn-outline btn-sm">View All</a>
+          </div>
+          <div class="panel-body" style="padding:0">
+            <div id="recent-requests-container">
+              <div class="loader"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  
+  <footer class="footer">
+    <div class="help-desk">
+      <strong>Help Desk:</strong>
+      <a href="mailto:tharshankarthick02@gmail.com">tharshankarthick02@gmail.com</a>
+      &nbsp;|&nbsp; Emergency Line: <a href="tel:9751185800">9751185800</a>
+    </div>
+    <div class="footer-copy">© 2026 VITC HealthCare Portal. All rights reserved.</div>
+  </footer>
+
+  
+  <div class="toast" id="toast"></div>
+
+  <script src="script.js"></script>
+  <script>
+    const API = 'http://localhost:4001/api';
+
+    
+    const now = new Date();
+    const hour = now.getHours();
+    const greet = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+    document.getElementById('admin-date-greeting').textContent =
+      `${greet}, Admin • ${now.toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}`;
+
+    
+    async function loadStats() {
+      try {
+        const [pRes, dRes, rRes] = await Promise.all([
+          fetch(`${API}/patients`),
+          fetch(`${API}/doctors`),
+          fetch(`${API}/requests`)
+        ]);
+        const patients  = await pRes.json();
+        const doctors   = await dRes.json();
+        const requests  = await rRes.json();
+        document.getElementById('stat-patients').textContent = patients.length || 0;
+        document.getElementById('stat-doctors').textContent  = doctors.filter(d => d.status === 'available').length || 0;
+        document.getElementById('stat-requests').textContent = requests.filter(r => r.status === 'pending').length || 0;
+      } catch {
+        document.getElementById('stat-patients').textContent = '—';
+        document.getElementById('stat-doctors').textContent  = '—';
+        document.getElementById('stat-requests').textContent = '—';
+      }
+    }
+
+    
+    async function loadRecentRequests() {
+      const container = document.getElementById('recent-requests-container');
+      try {
+        const res = await fetch(`${API}/requests`);
+        const data = await res.json();
+        const recent = data.slice(0, 8);
+        if (!recent.length) {
+          container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><h3>No Requests Yet</h3><p>Requests will appear here.</p></div>`;
+          return;
+        }
+        const statusBadge = s => s === 'approved' ? 'badge-active' : s === 'pending' ? 'badge-pending' : 'badge-danger';
+        container.innerHTML = `
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${recent.map((r,i) => `
+                <tr>
+                  <td style="color:var(--text-muted)">${i+1}</td>
+                  <td><strong>${r.patient_name}</strong></td>
+                  <td>${r.doctor_name}</td>
+                  <td>${new Date(r.appointment_date).toLocaleDateString('en-IN')}</td>
+                  <td><span class="badge ${statusBadge(r.status)}">${r.status}</span></td>
+                  <td>
+                    ${r.status === 'pending' ? `
+                      <button class="btn btn-success btn-sm" onclick="updateRequest(${r.id},'approved')">✔</button>
+                      <button class="btn btn-danger btn-sm" onclick="updateRequest(${r.id},'rejected')" style="margin-left:4px">✘</button>
+                    ` : '—'}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>`;
+      } catch {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Could not load data</h3><p>Make sure the backend server is running on port 4000.</p></div>`;
+      }
+    }
+
+    async function updateRequest(id, status) {
+      try {
+        await fetch(`${API}/requests/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        showToast(`Request ${status} successfully`, 'success');
+        loadRecentRequests();
+        loadStats();
+      } catch { showToast('Update failed', 'error'); }
+    }
+
+    
+    function openEmergencyModal(e) { e.preventDefault(); document.getElementById('emergencyModal').classList.add('active'); }
+    function closeEmergencyModal() { document.getElementById('emergencyModal').classList.remove('active'); }
+
+    async function submitEmergency() {
+      const patient  = document.getElementById('em-patient').value.trim();
+      const location = document.getElementById('em-location').value.trim();
+      const desc     = document.getElementById('em-desc').value.trim();
+      if (!patient || !location) { showToast('Fill in all required fields', 'error'); return; }
+      try {
+        await fetch(`${API}/emergency`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ patient_name: patient, location, description: desc, role: 'admin' })
+        });
+        showToast('🚨 Emergency alert dispatched!', 'success');
+        closeEmergencyModal();
+      } catch { showToast('Emergency sent (offline mode)', 'success'); closeEmergencyModal(); }
+    }
+
+    
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast show ${type}`;
+      setTimeout(() => t.className = 'toast', 3000);
+    }
+
+    
+    document.getElementById('emergencyModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('emergencyModal')) closeEmergencyModal();
+    });
+
+    loadStats();
+    loadRecentRequests();
+  </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "vitc-healthcare-portal",
+  "version": "1.0.0",
+  "description": "VITC HealthCare Portal - Auto launcher for backend and frontend",
+  "main": "start.js",
+  "scripts": {
+    "start": "node start.js",
+    "backend": "cd backend && npm start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

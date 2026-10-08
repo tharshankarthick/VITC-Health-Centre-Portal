@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Appointment Request — VITC Patient Portal</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">VITC HealthCare Portal</div>
+    <ul class="nav-links">
+      <li><a href="../patient.html">🏠 Dashboard</a></li>
+      <li><a href="doctorDetails.html">🩺 Doctor Details</a></li>
+      <li><a href="newRequest.html" class="active">📅 New Request</a></li>
+      <li><a href="contacts.html">📞 Contacts</a></li>
+      <li><a href="#" class="btn-emergency" onclick="openEmergencyModal(event)">Emergency Request</a></li>
+    </ul>
+  </nav>
+
+  
+  <div class="modal-overlay" id="emergencyModal">
+    <div class="modal">
+      <div class="modal-title">🚨 Emergency Request</div>
+      <p class="modal-subtitle">Send an urgent alert. On-duty doctors will be notified immediately.</p>
+      <div class="form-group"><label>Your Name</label><input type="text" id="em-name" class="form-control" placeholder="Your full name"></div>
+      <div class="form-group"><label>Your Phone</label><input type="tel" id="em-phone" class="form-control" placeholder="+91 XXXXX XXXXX"></div>
+      <div class="form-group"><label>Location / Ward</label><input type="text" id="em-location" class="form-control" placeholder="e.g. OPD Lobby, Block B Room 108"></div>
+      <div class="form-group"><label>Describe the Emergency</label><textarea id="em-desc" class="form-control" rows="3" placeholder="e.g. Severe chest pain..."></textarea></div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" style="flex:1" onclick="submitEmergency()">🚨 Send Emergency Alert</button>
+        <button class="btn btn-outline" onclick="closeEmergencyModal()">Cancel</button>
+      </div>
+      <p style="text-align:center;margin-top:12px;font-size:0.78rem;color:var(--text-muted)">
+        Or call: <a href="tel:9751185800" style="color:var(--red-emergency);font-weight:700">📞 9751185800</a>
+      </p>
+    </div>
+  </div>
+
+  
+  <div class="modal-overlay" id="successModal">
+    <div class="modal" style="text-align:center">
+      <div style="font-size:3.5rem;margin-bottom:16px">✅</div>
+      <div class="modal-title" style="color:var(--green);justify-content:center">Appointment Requested!</div>
+      <p class="modal-subtitle" style="text-align:center">Your appointment request has been submitted. The admin will review and confirm it shortly.</p>
+      <div style="background:var(--purple-subtle);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;margin:16px 0;text-align:left;">
+        <div id="confirm-details" style="font-size:0.85rem;color:var(--text-secondary);line-height:1.8;"></div>
+      </div>
+      <div class="modal-actions" style="justify-content:center;">
+        <a href="../patient.html" class="btn btn-primary">🏠 Go to Dashboard</a>
+        <button class="btn btn-outline" onclick="resetForm()">📅 Book Another</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="main-content" style="align-items:flex-start;">
+    <div class="dashboard">
+      <div class="dashboard-header">
+        <h1>Book an Appointment</h1>
+        <p>Fill in the form below to request a consultation with an available doctor</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start;">
+
+        
+        <div class="panel">
+          <div class="panel-header"><h3>📅 Appointment Details</h3></div>
+          <div class="panel-body">
+
+            
+            <div style="margin-bottom:24px;">
+              <h4 style="font-size:0.9rem;color:var(--purple-light);font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+                <span style="width:24px;height:24px;background:var(--purple-deep);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;">1</span>
+                Personal Information
+              </h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="req-name">Full Name *</label>
+                  <input type="text" id="req-name" class="form-control" placeholder="Your full name">
+                </div>
+                <div class="form-group">
+                  <label for="req-age">Age *</label>
+                  <input type="number" id="req-age" class="form-control" placeholder="e.g. 28">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="req-phone">Phone Number *</label>
+                  <input type="tel" id="req-phone" class="form-control" placeholder="+91 XXXXX XXXXX">
+                </div>
+                <div class="form-group">
+                  <label for="req-gender">Gender</label>
+                  <select id="req-gender" class="form-control">
+                    <option>Male</option><option>Female</option><option>Other</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            
+            <div style="margin-bottom:24px;">
+              <h4 style="font-size:0.9rem;color:var(--purple-light);font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+                <span style="width:24px;height:24px;background:var(--purple-deep);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;">2</span>
+                Doctor &amp; Schedule
+              </h4>
+              <div class="form-group">
+                <label for="req-doctor">Select Doctor *</label>
+                <select id="req-doctor" class="form-control" onchange="onDoctorChange()">
+                  <option value="">-- Select a Doctor --</option>
+                </select>
+              </div>
+              <div id="doctor-preview" style="display:none;background:var(--purple-subtle);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;margin-bottom:16px;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div style="font-size:2rem" id="doc-preview-emoji">🩺</div>
+                  <div>
+                    <div style="font-weight:600;color:#fff" id="doc-preview-name">—</div>
+                    <div style="font-size:0.8rem;color:var(--purple-light)" id="doc-preview-spec">—</div>
+                    <div style="font-size:0.78rem;color:var(--text-muted)" id="doc-preview-hours">—</div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="req-date">Preferred Date *</label>
+                  <input type="date" id="req-date" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label for="req-time">Preferred Time *</label>
+                  <select id="req-time" class="form-control">
+                    <option value="">-- Select Time --</option>
+                    <option>09:00 AM</option><option>09:30 AM</option><option>10:00 AM</option>
+                    <option>10:30 AM</option><option>11:00 AM</option><option>11:30 AM</option>
+                    <option>12:00 PM</option><option>02:00 PM</option><option>02:30 PM</option>
+                    <option>03:00 PM</option><option>03:30 PM</option><option>04:00 PM</option>
+                    <option>04:30 PM</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            
+            <div style="margin-bottom:24px;">
+              <h4 style="font-size:0.9rem;color:var(--purple-light);font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+                <span style="width:24px;height:24px;background:var(--purple-deep);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;">3</span>
+                Consultation Reason
+              </h4>
+              <div class="form-group">
+                <label for="req-reason">Reason / Symptoms *</label>
+                <textarea id="req-reason" class="form-control" rows="4" placeholder="Briefly describe your symptoms or reason for the appointment..."></textarea>
+              </div>
+              <div class="form-group">
+                <label for="req-notes">Additional Notes (optional)</label>
+                <input type="text" id="req-notes" class="form-control" placeholder="e.g. Allergic to penicillin, previous records available...">
+              </div>
+            </div>
+
+            <button class="btn btn-primary" style="width:100%;padding:12px;font-size:0.95rem" onclick="submitRequest()">
+              📅 Submit Appointment Request
+            </button>
+          </div>
+        </div>
+
+        
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="panel">
+            <div class="panel-header"><h3>ℹ️ How It Works</h3></div>
+            <div class="panel-body">
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                <div style="display:flex;gap:12px;align-items:flex-start;">
+                  <div style="width:32px;height:32px;background:rgba(0,210,255,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+                  <div><strong style="font-size:0.85rem">Fill the form</strong><p style="font-size:0.78rem;color:var(--text-muted)">Select doctor &amp; preferred time slot</p></div>
+                </div>
+                <div style="display:flex;gap:12px;align-items:flex-start;">
+                  <div style="width:32px;height:32px;background:rgba(0,210,255,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+                  <div><strong style="font-size:0.85rem">Admin Review</strong><p style="font-size:0.78rem;color:var(--text-muted)">Admin confirms or reschedules</p></div>
+                </div>
+                <div style="display:flex;gap:12px;align-items:flex-start;">
+                  <div style="width:32px;height:32px;background:rgba(0,210,255,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+                  <div><strong style="font-size:0.85rem">Confirmation</strong><p style="font-size:0.78rem;color:var(--text-muted)">Your appointment is confirmed</p></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header"><h3>🚨 Emergency?</h3></div>
+            <div class="panel-body">
+              <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;">If this is a life-threatening emergency, do not use this form. Use the emergency button.</p>
+              <button class="emergency-call-btn" onclick="openEmergencyModal(event)">🚨 Emergency Request</button>
+              <a href="tel:9751185800" class="btn btn-outline" style="width:100%;justify-content:center;">📞 Call 9751185800</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="help-desk">
+      <strong>Help Desk:</strong>
+      <a href="mailto:tharshankarthick02@gmail.com">tharshankarthick02@gmail.com</a>
+      &nbsp;|&nbsp; Emergency: <a href="tel:9751185800">9751185800</a>
+    </div>
+    <div class="footer-copy">© 2026 VITC HealthCare Portal</div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = 'http://localhost:4001/api';
+    let doctors = [];
+
+    
+    document.getElementById('req-date').min = new Date().toISOString().split('T')[0];
+
+    
+    const params = new URLSearchParams(window.location.search);
+    const prefillDoctorId   = params.get('doctor_id');
+    const prefillDoctorName = params.get('doctor_name');
+
+    const SPEC_EMOJI = { cardiolog:'❤️', neurol:'🧠', ortho:'🦴', pediatr:'🍼', dermatol:'🫧', general:'🩺', oncol:'🎗️', gynae:'👶', ophtha:'👁️', ent:'👂' };
+    function specEmoji(s) {
+      if (!s) return '🩺';
+      s = s.toLowerCase();
+      for (const [k,v] of Object.entries(SPEC_EMOJI)) { if (s.includes(k)) return v; }
+      return '🩺';
+    }
+
+    async function loadDoctors() {
+      try {
+        const res = await fetch(`${API}/doctors`);
+        doctors = await res.json();
+        const sel = document.getElementById('req-doctor');
+        doctors.filter(d => d.status === 'available').forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.id;
+          opt.textContent = `${d.name} — ${d.specialty || 'General'}`;
+          sel.appendChild(opt);
+        });
+        if (prefillDoctorId) {
+          sel.value = prefillDoctorId;
+          onDoctorChange();
+        }
+      } catch {
+        showToast('Could not load doctors. Check server.', 'error');
+      }
+    }
+
+    function onDoctorChange() {
+      const id  = document.getElementById('req-doctor').value;
+      const doc = doctors.find(d => String(d.id) === String(id));
+      const preview = document.getElementById('doctor-preview');
+      if (doc) {
+        document.getElementById('doc-preview-emoji').textContent = specEmoji(doc.specialty);
+        document.getElementById('doc-preview-name').textContent  = doc.name;
+        document.getElementById('doc-preview-spec').textContent  = doc.specialty || 'General';
+        document.getElementById('doc-preview-hours').textContent = `⏰ ${doc.consultation_hours || 'Contact for availability'}`;
+        preview.style.display = 'block';
+      } else {
+        preview.style.display = 'none';
+      }
+    }
+
+    async function submitRequest() {
+      const name     = document.getElementById('req-name').value.trim();
+      const age      = document.getElementById('req-age').value;
+      const phone    = document.getElementById('req-phone').value.trim();
+      const gender   = document.getElementById('req-gender').value;
+      const doctorId = document.getElementById('req-doctor').value;
+      const date     = document.getElementById('req-date').value;
+      const time     = document.getElementById('req-time').value;
+      const reason   = document.getElementById('req-reason').value.trim();
+      const notes    = document.getElementById('req-notes').value.trim();
+
+      if (!name || !phone || !doctorId || !date || !time || !reason) {
+        showToast('Please fill all required fields (*)', 'error');
+        return;
+      }
+
+      const doc = doctors.find(d => String(d.id) === String(doctorId));
+      const payload = { patient_name: name, age, phone, gender, doctor_id: doctorId, doctor_name: doc?.name, appointment_date: date, appointment_time: time, reason, notes, status: 'pending' };
+
+      try {
+        await fetch(`${API}/requests`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      } catch {  }
+
+      
+      document.getElementById('confirm-details').innerHTML = `
+        <div>👤 <strong>Name:</strong> ${name}</div>
+        <div>🩺 <strong>Doctor:</strong> ${doc?.name || '—'} (${doc?.specialty || '—'})</div>
+        <div>📅 <strong>Date:</strong> ${new Date(date).toLocaleDateString('en-IN', {weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div>
+        <div>⏰ <strong>Time:</strong> ${time}</div>
+        <div>📋 <strong>Reason:</strong> ${reason}</div>
+      `;
+      document.getElementById('successModal').classList.add('active');
+    }
+
+    function resetForm() {
+      document.getElementById('successModal').classList.remove('active');
+      document.querySelectorAll('.form-control').forEach(f => f.value = '');
+      document.getElementById('doctor-preview').style.display = 'none';
+    }
+
+    function openEmergencyModal(e) { e.preventDefault(); document.getElementById('emergencyModal').classList.add('active'); }
+    function closeEmergencyModal() { document.getElementById('emergencyModal').classList.remove('active'); }
+    async function submitEmergency() {
+      const name = document.getElementById('em-name').value.trim();
+      const loc  = document.getElementById('em-location').value.trim();
+      if (!name || !loc) { showToast('Fill name and location', 'error'); return; }
+      try {
+        await fetch(`${API}/emergency`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patient_name:name, phone: document.getElementById('em-phone').value, location:loc, description: document.getElementById('em-desc').value, role:'patient' }) });
+        showToast('🚨 Help is on the way!', 'success'); closeEmergencyModal();
+      } catch { showToast('🚨 Alert sent! Call 9751185800 now.', 'success'); closeEmergencyModal(); }
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.className = `toast show ${type}`;
+      setTimeout(() => t.className = 'toast', 3500);
+    }
+
+    [document.getElementById('emergencyModal'), document.getElementById('successModal')].forEach(m => {
+      m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
+    });
+
+    loadDoctors();
+  </script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Details — VITC Patient Portal</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">VITC HealthCare Portal</div>
+    <ul class="nav-links">
+      <li><a href="../patient.html">🏠 Dashboard</a></li>
+      <li><a href="doctorDetails.html">🩺 Doctor Details</a></li>
+      <li><a href="newRequest.html">📅 New Request</a></li>
+      <li><a href="contacts.html" class="active">📞 Contacts</a></li>
+      <li><a href="#" class="btn-emergency" onclick="openEmergencyModal(event)">Emergency Request</a></li>
+    </ul>
+  </nav>
+
+  
+  <div class="modal-overlay" id="emergencyModal">
+    <div class="modal">
+      <div class="modal-title">🚨 Emergency Request</div>
+      <p class="modal-subtitle">Send an urgent alert. On-duty doctors will be notified immediately.</p>
+      <div class="form-group"><label>Your Name</label><input type="text" id="em-name" class="form-control" placeholder="Your full name"></div>
+      <div class="form-group"><label>Your Phone</label><input type="tel" id="em-phone" class="form-control" placeholder="+91 XXXXX XXXXX"></div>
+      <div class="form-group"><label>Location / Ward</label><input type="text" id="em-location" class="form-control" placeholder="e.g. OPD Lobby, Block B Room 108"></div>
+      <div class="form-group"><label>Describe the Emergency</label><textarea id="em-desc" class="form-control" rows="3" placeholder="e.g. Severe chest pain..."></textarea></div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" style="flex:1" onclick="submitEmergency()">🚨 Send Emergency Alert</button>
+        <button class="btn btn-outline" onclick="closeEmergencyModal()">Cancel</button>
+      </div>
+      <p style="text-align:center;margin-top:12px;font-size:0.78rem;color:var(--text-muted)">
+        Or call: <a href="tel:9751185800" style="color:var(--red-emergency);font-weight:700">📞 9751185800</a>
+      </p>
+    </div>
+  </div>
+
+  <main class="main-content" style="align-items:flex-start;">
+    <div class="dashboard">
+      <div class="dashboard-header">
+        <h1>Contact Details</h1>
+        <p>Reach us anytime — we're here 24/7 for your health needs</p>
+      </div>
+
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px;">
+        <a href="tel:9751185800" class="emergency-call-btn">
+          🚨 Emergency Helpline: 9751185800
+        </a>
+        <button class="emergency-call-btn" onclick="openEmergencyModal(event)">
+          📲 Submit Emergency Request Online
+        </button>
+      </div>
+
+      
+      <div class="contact-grid">
+        <div class="contact-card">
+          <div class="contact-icon">🏥</div>
+          <div class="contact-info">
+            <h4>Main Hospital</h4>
+            <p>VITC Health Centre<br>Vellore Institute of Technology Campus<br>Vellore, Tamil Nadu — 632014</p>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon">📞</div>
+          <div class="contact-info">
+            <h4>Phone Numbers</h4>
+            <a href="tel:9751185800">📞 9751185800 (Emergency)</a><br>
+            <a href="tel:04162202020">📞 0416-2202020 (Reception)</a><br>
+            <a href="tel:04162202021">📞 0416-2202021 (OPD)</a>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon">✉️</div>
+          <div class="contact-info">
+            <h4>Email Addresses</h4>
+            <a href="mailto:tharshankarthick02@gmail.com">tharshankarthick02@gmail.com</a><br>
+            <a href="mailto:healthcenter@vit.ac.in">healthcenter@vit.ac.in</a><br>
+            <a href="mailto:admin.vitc@vit.ac.in">admin.vitc@vit.ac.in</a>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon">⏰</div>
+          <div class="contact-info">
+            <h4>Working Hours</h4>
+            <p>OPD: Mon–Sat, 8:00 AM – 6:00 PM<br>
+               Emergency: 24 × 7 × 365<br>
+               Lab: Mon–Sat, 7:00 AM – 8:00 PM</p>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon">🚑</div>
+          <div class="contact-info">
+            <h4>Ambulance Services</h4>
+            <p>Campus Ambulance: <a href="tel:108">108</a><br>
+               Private Ambulance: <a href="tel:9751185800">9751185800</a><br>
+               Available 24 hours</p>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon">💊</div>
+          <div class="contact-info">
+            <h4>Pharmacy</h4>
+            <p>Ground Floor, Health Centre Block<br>
+               Mon–Sat: 8:00 AM – 9:00 PM<br>
+               Sun: 9:00 AM – 6:00 PM</p>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon">🔬</div>
+          <div class="contact-info">
+            <h4>Diagnostic Lab</h4>
+            <p>Level 1, Health Centre<br>
+               Blood tests, X-ray, ECG & more<br>
+               Results within 2–4 hours</p>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon">🌐</div>
+          <div class="contact-info">
+            <h4>Online & Social</h4>
+            <a href="https://vit.ac.in" target="_blank">🔗 vit.ac.in</a><br>
+            <a href="mailto:healthcenter@vit.ac.in">📧 Email Us</a><br>
+            <a href="https://wa.me/919751185800" target="_blank">💬 WhatsApp Us</a>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="panel" style="margin-bottom:28px;">
+        <div class="panel-header"><h3>🏥 Departments & Direct Lines</h3></div>
+        <div class="panel-body" style="padding:0;">
+          <table class="data-table">
+            <thead>
+              <tr><th>Department</th><th>Head of Department</th><th>Direct Line</th><th>Email</th></tr>
+            </thead>
+            <tbody id="departments-table">
+              <tr><td colspan="4" style="text-align:center;padding:24px;"><div class="spinner" style="margin:auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="help-desk">
+      <strong>Help Desk:</strong>
+      <a href="mailto:tharshankarthick02@gmail.com">tharshankarthick02@gmail.com</a>
+      &nbsp;|&nbsp; Emergency: <a href="tel:9751185800">9751185800</a>
+    </div>
+    <div class="footer-copy">© 2026 VITC HealthCare Portal</div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = 'http://localhost:4001/api';
+
+    async function loadContacts() {
+      try {
+        const res = await fetch(`${API}/contacts`);
+        const data = await res.json();
+        if (data.length) {
+          document.getElementById('departments-table').innerHTML = data.map(c => `
+            <tr>
+              <td><strong>${c.department}</strong></td>
+              <td>${c.head_name || '—'}</td>
+              <td><a href="tel:${c.phone}" style="color:var(--purple-light)">${c.phone || '—'}</a></td>
+              <td><a href="mailto:${c.email}" style="color:var(--purple-light)">${c.email || '—'}</a></td>
+            </tr>
+          `).join('');
+          return;
+        }
+      } catch {  }
+
+      
+      const fallback = [
+        { department: 'Cardiology',        head_name: 'Dr. Senthil Nathan',            phone: '044-39931001', email: 'cardiology@vitc.ac.in' },
+        { department: 'Neurology',         head_name: 'Dr. Meenakshi Sundaram',        phone: '044-39931002', email: 'neurology@vitc.ac.in' },
+        { department: 'Orthopaedics',      head_name: 'Dr. Murugan Palanisamy',        phone: '044-39931003', email: 'orthopaedics@vitc.ac.in' },
+        { department: 'Paediatrics',       head_name: 'Dr. Anbarasi Karunanidhi',      phone: '044-39931004', email: 'paediatrics@vitc.ac.in' },
+        { department: 'General Medicine',  head_name: 'Dr. Karthikeyan Ramachandran',  phone: '044-39931005', email: 'genmed@vitc.ac.in' },
+        { department: 'Dermatology',       head_name: 'Dr. Priyadharshini Selvam',     phone: '044-39931006', email: 'dermatology@vitc.ac.in' },
+        { department: 'Emergency & Trauma',head_name: 'Dr. Saravanan Ramanathan',      phone: '044-39931999', email: 'emergency@vitc.ac.in' },
+        { department: 'Ophthalmology',     head_name: 'Dr. Soundarya Balasubramanian', phone: '044-39931008', email: 'ophthalmology@vitc.ac.in' },
+      ];
+      document.getElementById('departments-table').innerHTML = fallback.map(c => `
+        <tr>
+          <td><strong>${c.department}</strong></td>
+          <td>${c.head_name}</td>
+          <td><a href="tel:${c.phone}" style="color:var(--purple-light)">${c.phone}</a></td>
+          <td><a href="mailto:${c.email}" style="color:var(--purple-light)">${c.email}</a></td>
+        </tr>
+      `).join('');
+    }
+
+    function openEmergencyModal(e) { e.preventDefault(); document.getElementById('emergencyModal').classList.add('active'); }
+    function closeEmergencyModal() { document.getElementById('emergencyModal').classList.remove('active'); }
+    async function submitEmergency() {
+      const name = document.getElementById('em-name').value.trim();
+      const loc  = document.getElementById('em-location').value.trim();
+      if (!name || !loc) { showToast('Fill name and location', 'error'); return; }
+      try {
+        await fetch(`${API}/emergency`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ patient_name:name, phone: document.getElementById('em-phone').value, location:loc, description: document.getElementById('em-desc').value, role:'patient' }) });
+        showToast('🚨 Help is on the way!', 'success'); closeEmergencyModal();
+      } catch { showToast('🚨 Alert sent! Call 9751185800 now.', 'success'); closeEmergencyModal(); }
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.className = `toast show ${type}`;
+      setTimeout(() => t.className = 'toast', 3500);
+    }
+
+    document.getElementById('emergencyModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('emergencyModal')) closeEmergencyModal();
+    });
+
+    loadContacts();
+  </script>
+</body>
+</html>
